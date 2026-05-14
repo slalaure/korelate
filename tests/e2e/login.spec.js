@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./obscura-fixture.js');
 
 test.describe('Authentication Flow', () => {
   test('should redirect to login page when not authenticated', async ({ page }) => {

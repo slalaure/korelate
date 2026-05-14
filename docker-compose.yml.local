@@ -6,6 +6,7 @@
 #   COMPOSE_PROFILES=ot docker compose -f docker-compose.yml.local up -d
 #   COMPOSE_PROFILES=bms docker compose -f docker-compose.yml.local up -d
 #   COMPOSE_PROFILES=it docker compose -f docker-compose.yml.local up -d
+#   COMPOSE_PROFILES=e2e docker compose -f docker-compose.yml.local up -d
 #   COMPOSE_PROFILES=all docker compose -f docker-compose.yml.local up -d
 #
 # Unitary testing (e.g. just postgres and mqtt):
@@ -237,6 +238,22 @@ services:
     networks:
       - korelate_net
 
+  # ==========================================
+  # E2E TESTING PACKAGES (profiles: e2e)
+  # ==========================================
+  obscura:
+    image: h4ckf0r0day/obscura:latest
+    container_name: korelate_obscura_local
+    platform: linux/amd64 # <--- ADD THIS LINE
+    profiles: ["e2e", "all"]
+    ports:
+      - "9222:9222"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - korelate_net
+    logging: *default-logging
+    
 networks:
   korelate_net:
     driver: bridge

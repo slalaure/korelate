@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./obscura-fixture.js');
 
 test.describe('HMI Asset Management Flow', () => {
   const username = process.env.ADMIN_USERNAME || 'admin';

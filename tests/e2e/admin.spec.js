@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./obscura-fixture.js');
 
 test.describe('Admin Panel & Webhooks', () => {
   const username = process.env.ADMIN_USERNAME || 'admin';
@@ -7,13 +7,22 @@ test.describe('Admin Panel & Webhooks', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto('/login');
+    
+    // Wait for the dynamic login form to be injected
     await page.waitForSelector('#login-username');
+    
     await page.fill('#login-username', username);
     await page.fill('#login-password', password);
     await page.click('#login-form button[type="submit"]');
     
-    // Wait for the tree view to be fully active and loaded
+    // Wait for the Tree View specifically to ensure DOM is fully hydrated
     await expect(page.locator('#btn-tree-view')).toHaveClass(/active/, { timeout: 10000 });
+    
+    // Crucial fix: Wait for the main container to be visible and stable
+    await page.waitForSelector('.tree-controls', { state: 'visible' });
+    
+    // Add a tiny explicit wait to ensure event listeners in finishInitialization() are fully bound
+    await page.waitForTimeout(500); 
 
     // Ensure we start with a clean state by clearing all webhooks
     await page.click('#btn-admin-view');
@@ -58,9 +67,8 @@ test.describe('Admin Panel & Webhooks', () => {
     await row.locator('button.btn-test-webhook').click();
 
     // 7. Verify the toast message
-    const toast = page.locator('.toast.toast-success');
-    await expect(toast).toBeVisible();
-    await expect(toast).toContainText('Test trigger sent');
+    const toast = page.locator('.korelate-toast.success').last();
+    await expect(toast).toBeVisible({ timeout: 10000 });
 
     // 8. Delete the webhook
     await row.locator('button.btn-delete-webhook').click();

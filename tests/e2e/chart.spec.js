@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./obscura-fixture.js');
 
 test.describe('Chart Generation & Configuration Flow', () => {
   const username = process.env.ADMIN_USERNAME || 'admin';
@@ -49,7 +49,7 @@ test.describe('Chart Generation & Configuration Flow', () => {
 
     // 5. Select the variable to chart
     // Wait for the variables list to populate
-    const variableCheckbox = page.locator('.chart-variable-item input[type="checkbox"]').first();
+    const variableCheckbox = page.locator('.var-checkbox').first();
     await variableCheckbox.waitFor({ state: 'visible', timeout: 5000 });
     
     // Checking the variable automatically triggers the chart generation via reactive state

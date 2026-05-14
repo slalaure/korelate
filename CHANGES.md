@@ -1,6 +1,10 @@
 # Korelate Changelog
 
-## 2026-05-14 - Mobile UX Improvements & UNS Model Update
+## 2026-05-14 - E2E Obscura Fixes & Mobile UX
+- **E2E Testing (Obscura)**:
+    - **Fixed Artifact Capture**: Enabled automatic screenshots and video recording for Playwright tests running against the Obscura remote browser.
+    - **Network Routing**: Corrected `baseURL` for the `obscura` project to use the internal Docker network address (`http://app:8080`), fixing navigation failures.
+    - **Robust Fixture**: Updated `obscura-fixture.js` to support `OBSCURA_WS_ENDPOINT` environment variable and improved connection error handling.
 - **Mobile UX & UI Polish**:
     - **Voice Chat Fix**: Resolved a critical bug in `AiChatWidget` where voice transcripts were duplicated on Android devices. Improved state management for mic activation and input handling.
     - **Responsive Layouts**: Fixed height and overflow issues in the Publish view panels on mobile screens. Removed arbitrary `min-height` that broke scrolling on smaller devices.

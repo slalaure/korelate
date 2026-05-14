@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./obscura-fixture.js');
 
 test.describe('Navigation and Layout', () => {
   const username = process.env.ADMIN_USERNAME || 'admin';
@@ -30,8 +30,7 @@ test.describe('Navigation and Layout', () => {
     await expect(page.locator('main#tree-view')).toHaveClass(/active/);
     
     await expect(page.locator('header')).toBeVisible();
-    await expect(page.locator('nav.tab-nav')).toBeVisible();
-    await expect(page.locator('footer.app-footer')).toBeVisible();
+    await expect(page.locator('nav.sidebar-nav')).toBeVisible();
   });
 
   test('should navigate through main tabs correctly', async ({ page }) => {

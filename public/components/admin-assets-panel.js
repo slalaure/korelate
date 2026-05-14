@@ -100,7 +100,7 @@ class AdminAssetsPanel extends HTMLElement {
 
         const formData = new FormData();
         for (let i = 0; i < files.length; i++) {
-            formData.append('hmi_assets', files[i]);
+            formData.append('assets', files[i]);
         }
 
         btn.disabled = true;
@@ -108,10 +108,11 @@ class AdminAssetsPanel extends HTMLElement {
         if (status) status.textContent = "Uploading...";
 
         try {
-            const response = await fetch('api/admin/upload-hmi', { method: 'POST', body: formData });
+            const response = await fetch('api/admin/hmi-assets', { method: 'POST', body: formData });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || "Upload failed.");
-            showToast(`${result.count} files uploaded successfully.`, "success");
+            const fileCount = result.files ? result.files.length : '1';
+            showToast(`${fileCount} files uploaded successfully.`, "success");
             input.value = '';
             this.loadAssets();
         } catch (e) {
