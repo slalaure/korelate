@@ -719,7 +719,7 @@ body.dark-mode .is-file.mapped-target .node-name::before { filter: invert(80%) s
         padding: 0 5px;
     }
     
-    #btn-sidebar-toggle { display: none; }
+    #btn-sidebar-toggle { display: none !important; }
     
     /* Force hide labels on mobile to only show icons */
     .nav-label { display: none !important; }

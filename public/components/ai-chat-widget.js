@@ -41,6 +41,7 @@ class AiChatWidget extends HTMLElement {
         this.recognition = null;
         this.isListening = false;
         this.finalTranscript = '';
+        this.initialTranscript = ''; // Safely store input pre-mic
         this.userWantMicActive = false;
         this.wasVoiceTurn = false; // Tracks if the CURRENT interaction was voice-driven
         this.availableVoices = [];
@@ -342,6 +343,7 @@ class AiChatWidget extends HTMLElement {
         if (!text && !this.pendingAttachment) return;
         
         this.finalTranscript = ''; // Prevent bleed-over to next voice input
+        this.initialTranscript = '';
 
         this.isProcessing = true;
         this.updateProcessingUI(true);
@@ -701,13 +703,18 @@ class AiChatWidget extends HTMLElement {
 
         this.recognition.onresult = (event) => {
             this.resetSilenceTimer();
-            let interimTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) this.finalTranscript += event.results[i][0].transcript + ' ';
-                else interimTranscript += event.results[i][0].transcript;
+            let finalT = '';
+            let interimT = '';
+            
+            // Re-evaluate from the entire array to prevent Android duplication issues
+            for (let i = 0; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) finalT += event.results[i][0].transcript + ' ';
+                else interimT += event.results[i][0].transcript;
             }
+            
+            this.finalTranscript = this.initialTranscript + finalT;
             const input = this.querySelector('#chat-input');
-            input.value = this.finalTranscript + interimTranscript;
+            input.value = this.finalTranscript + interimT;
             this.autoResizeInput();
         };
 
@@ -749,7 +756,8 @@ class AiChatWidget extends HTMLElement {
             window.speechSynthesis.cancel();
             this.userWantMicActive = true;
             const input = this.querySelector('#chat-input');
-            this.finalTranscript = input.value ? input.value + ' ' : '';
+            // Safely store any text the user typed before hitting the mic
+            this.initialTranscript = input.value ? input.value + ' ' : '';
             try { this.recognition.start(); } catch(e) {}
         }
     }

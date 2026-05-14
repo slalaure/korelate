@@ -202,6 +202,7 @@ main#publish-view {
 .simulator-instance-controls button:disabled:hover {
     background-color: var(--color-bg-tertiary);
 }
+
 /* --- Mobile Responsive --- */
 @media (max-width: 768px) {
     main#publish-view {
@@ -213,21 +214,26 @@ main#publish-view {
     #drag-handle-vertical-publish {
         display: none; /* Hide resizer on mobile */
     }
+    
     .publish-panel-wrapper,
     .simulator-panel-wrapper {
         flex: none; /* Reset flex */
         width: 100%;
-        min-height: 500px;
-        overflow-y: visible; 
+        height: auto; /* Fix: allow container to grow based on content */
+        min-height: auto; /* Fix: remove arbitrary min-height to prevent layout breaking */
+        overflow-y: visible; /* Let the parent view-container handle scrolling */
     }
+    
     .publish-options-row {
         flex-direction: column;
         gap: 10px;
         align-items: stretch;
     }
+    
     .publish-options-row .form-group-checkbox {
         padding-bottom: 0;
     }
+    
     #publish-payload-editor {
         min-height: 250px;
     }

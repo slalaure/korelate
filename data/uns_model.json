@@ -5,22 +5,8 @@
       "displayName": "i3X Standard Core"
     },
     {
-      "uri": "https://stark-industries.com/uns",
-      "displayName": "Stark Industries (Malibu)"
-    },
-    {
       "uri": "https://hydrochem-ag.com/uns",
       "displayName": "HyDroChem-AG (Frankfurt)"
-    },
-    {
-      "uri": "https://airliquide.com/alat",
-      "displayName": "Air Liquide Advanced Technologies",
-      "isaLevel": "Enterprise",
-      "namespaceUri": "https://airliquide.com/alat",
-      "schema": {
-        "type": "object",
-        "properties": {}
-      }
     }
   ],
   "objectTypes": [
@@ -46,165 +32,162 @@
         "properties": {
           "status": {
             "type": "string",
-            "title": "status",
-            "keyType": "-",
-            "confidentiality": "Public",
-            "sensitivity": "Normal",
             "pattern": "^(RUNNING|STOPPED|IDLE|MAINTENANCE|FAULTED|OFFLINE)$"
           },
           "active_wo": {
             "type": "string",
-            "title": "active_wo",
-            "keyType": "-",
-            "confidentiality": "Public",
-            "sensitivity": "Normal",
-            "pattern": "^WO-\\d{4,12}$"
+            "pattern": "^WO-.*$"
           }
         }
       }
     },
     {
-      "elementId": "ALAT_BuildingType",
-      "displayName": "ALAT Facility Building",
-      "namespaceUri": "https://airliquide.com/alat",
+      "elementId": "Hydrochem_DryingOvenType",
+      "displayName": "Hydrochem Drying Oven",
+      "namespaceUri": "https://hydrochem-ag.com/uns",
       "schema": {
         "type": "object",
         "properties": {
-          "building_id": {
-            "type": "string"
+          "zone1_temp_c": {
+            "type": "number",
+            "unit": "°C"
+          },
+          "zone2_temp_c": {
+            "type": "number",
+            "unit": "°C"
+          },
+          "zone3_temp_c": {
+            "type": "number",
+            "unit": "°C"
+          },
+          "zone4_temp_c": {
+            "type": "number",
+            "unit": "°C"
+          },
+          "zone5_temp_c": {
+            "type": "number",
+            "unit": "°C"
+          },
+          "zone6_temp_c": {
+            "type": "number",
+            "unit": "°C"
+          },
+          "voc_exhaust_fan_hz": {
+            "type": "number",
+            "unit": "Hz"
+          },
+          "total_power_kw": {
+            "type": "number",
+            "unit": "kW"
           }
         }
       }
     },
     {
-      "elementId": "ALAT_AmbienceSensorType",
-      "displayName": "ALAT HVAC Ambience Sensor",
-      "namespaceUri": "https://airliquide.com/alat",
+      "elementId": "Hydrochem_CoatingType",
+      "displayName": "Hydrochem Coating Station",
+      "namespaceUri": "https://hydrochem-ag.com/uns",
       "schema": {
         "type": "object",
         "properties": {
-          "temperature_c": {
+          "pump_hz": {
+            "type": "number",
+            "unit": "Hz"
+          },
+          "mass_flow_kg_min": {
+            "type": "number",
+            "unit": "kg/min"
+          },
+          "gap_um": {
+            "type": "number",
+            "unit": "µm"
+          }
+        }
+      }
+    },
+    {
+      "elementId": "Hydrochem_WebHandlingType",
+      "displayName": "Hydrochem Web Handling",
+      "namespaceUri": "https://hydrochem-ag.com/uns",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "speed_m_min": {
+            "type": "number",
+            "unit": "m/min"
+          },
+          "tension_n": {
+            "type": "number",
+            "unit": "N"
+          }
+        }
+      }
+    },
+    {
+      "elementId": "Hydrochem_HvacType",
+      "displayName": "Hydrochem HVAC System",
+      "namespaceUri": "https://hydrochem-ag.com/uns",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "temp_c": {
             "type": "number",
             "unit": "°C",
-            "description": "Ambient room temperature",
-            "source": "HVAC PLC (Siemens S7)",
-            "nominal_value": 21.42,
+            "nominal_value": 21,
             "expected_range": [
-              18,
-              24
+              20.5,
+              21.5
             ],
-            "data_frequency_seconds": 10.18
+            "data_frequency_seconds": 1,
+            "description": "Ambient air temperature in the cleanroom area measured in Celsius.",
+            "pattern": "^(20|21|22)\\.\\d+$",
+            "source": "Vaisala HMT330 Precision Temperature & Humidity Transmitter"
           },
-          "co2_ppm": {
+          "humidity_rh": {
             "type": "number",
-            "unit": "ppm",
-            "description": "Carbon Dioxide concentration levels",
-            "source": "Wall-mounted CO2 Sensor",
-            "nominal_value": 724.14,
+            "unit": "%",
+            "nominal_value": 45,
             "expected_range": [
-              400,
-              1100
+              40,
+              50
             ],
-            "data_frequency_seconds": 10.18
+            "data_frequency_seconds": 1,
+            "description": "Relative humidity percentage in the cleanroom area.",
+            "pattern": "^(4[0-9])\\.\\d+$",
+            "source": "Vaisala HMT330 Precision Temperature & Humidity Transmitter"
           },
-          "occupancy_count": {
+          "pressure_pa": {
             "type": "number",
-            "description": "Estimated number of people in the area based on entry/exit logs",
-            "source": "BMS System",
-            "nominal_value": 65,
-            "expected_range": [
-              0,
-              200
-            ],
-            "data_frequency_seconds": 10.18
+            "unit": "Pa"
           },
-          "hvac_mode": {
-            "type": "string",
-            "description": "The current operating mode of the HVAC unit",
-            "pattern": "^(HEAT|COOL|VENT|AUTO|OFF)$"
+          "ahu_vfd_hz": {
+            "type": "number",
+            "unit": "Hz"
           }
         }
       }
     },
     {
-      "elementId": "ALAT_SafetyStatusType",
-      "displayName": "ALAT Safety Alarm Status",
-      "namespaceUri": "https://airliquide.com/alat",
+      "elementId": "Hydrochem_ElectricalType",
+      "displayName": "Hydrochem Electrical Substation",
+      "namespaceUri": "https://hydrochem-ag.com/uns",
       "schema": {
         "type": "object",
         "properties": {
-          "alarm": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    {
-      "elementId": "ALAT_MeterType",
-      "displayName": "ALAT Utility Meter",
-      "namespaceUri": "https://airliquide.com/alat",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "index_kwh": {
+          "voltage_v": {
             "type": "number",
-            "unit": "kWh"
+            "unit": "V"
           },
-          "index_m3": {
+          "active_power_kw": {
             "type": "number",
-            "unit": "m3"
+            "unit": "kW"
           }
         }
       }
     },
     {
-      "elementId": "RobotArmType",
-      "displayName": "Robotic Assembly Arm",
-      "namespaceUri": "https://stark-industries.com/uns"
-    },
-    {
-      "elementId": "LaserWelderType",
-      "displayName": "Precision Laser Welder",
-      "namespaceUri": "https://stark-industries.com/uns"
-    },
-    {
-      "elementId": "CNCMillType",
-      "displayName": "5-Axis CNC Mill",
-      "namespaceUri": "https://stark-industries.com/uns"
-    },
-    {
-      "elementId": "GasTankType",
-      "displayName": "Industrial Gas Tank",
-      "namespaceUri": "https://cesmii.org/i3x"
-    },
-    {
-      "elementId": "PowerMeterType",
-      "displayName": "Facility Power Meter",
-      "namespaceUri": "https://cesmii.org/i3x"
-    },
-    {
-      "elementId": "PowerModulatorType",
-      "displayName": "Arc Reactor Modulator",
-      "namespaceUri": "https://stark-industries.com/uns"
-    },
-    {
-      "elementId": "CleanRoomType",
-      "displayName": "Clean Room Environment",
-      "namespaceUri": "https://cesmii.org/i3x"
-    },
-    {
-      "elementId": "DryingOvenType",
-      "displayName": "Industrial Drying Oven",
-      "namespaceUri": "https://hydrochem-ag.com/uns"
-    },
-    {
-      "elementId": "ChillerPlantType",
-      "displayName": "Central Chiller Plant",
-      "namespaceUri": "https://hydrochem-ag.com/uns"
-    },
-    {
-      "elementId": "BmsSystemType",
-      "displayName": "BmsSystemType (Auto-generated)",
+      "elementId": "BmsType",
+      "displayName": "BmsType (Auto-generated)",
       "namespaceUri": "https://cesmii.org/i3x",
       "schema": {
         "type": "object",
@@ -219,160 +202,113 @@
         "type": "object",
         "properties": {}
       }
+    },
+    {
+      "elementId": "CleanroomAreaType",
+      "displayName": "CleanroomAreaType (Auto-generated)",
+      "namespaceUri": "https://cesmii.org/i3x",
+      "schema": {
+        "type": "object",
+        "properties": {}
+      }
     }
   ],
   "instances": [
     {
-      "elementId": "ALAT_Enterprise",
-      "displayName": "Air Liquide Advanced Technologies",
+      "elementId": "hydrochem_enterprise",
+      "displayName": "HyDroChem-AG",
       "isaLevel": "Enterprise",
-      "namespaceUri": "https://airliquide.com/alat"
+      "namespaceUri": "https://hydrochem-ag.com/uns"
     },
     {
-      "elementId": "sassenage_site",
-      "displayName": "Sassenage Site",
+      "elementId": "frankfurt_site",
+      "displayName": "Frankfurt Plant",
       "typeId": "SiteType",
-      "parentId": "ALAT_Enterprise",
+      "parentId": "hydrochem_enterprise",
       "isaLevel": "Site",
       "namespaceUri": "https://cesmii.org/i3x"
     },
     {
-      "elementId": "cavendish",
-      "displayName": "Cavendish Building",
-      "typeId": "ALAT_BuildingType",
-      "parentId": "sassenage_site",
-      "isaLevel": "Area",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "cavendish_hvac",
-      "displayName": "Cavendish HVAC Ambience",
-      "typeId": "ALAT_AmbienceSensorType",
-      "parentId": "cavendish",
-      "isaLevel": "Equipment",
-      "topic_mapping": "ALAT/Sassenage/Cavendish/BMS/HVAC/Ambience/Telemetry",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "cavendish_safety",
-      "displayName": "Cavendish Safety Status",
-      "typeId": "ALAT_SafetyStatusType",
-      "parentId": "cavendish",
-      "isaLevel": "Equipment",
-      "topic_mapping": "ALAT/Sassenage/Cavendish/Safety/Alarm/Status",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "curie",
-      "displayName": "Curie Building",
-      "typeId": "ALAT_BuildingType",
-      "parentId": "sassenage_site",
-      "isaLevel": "Area",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "curie_hvac",
-      "displayName": "Curie HVAC Ambience",
-      "typeId": "ALAT_AmbienceSensorType",
-      "parentId": "curie",
-      "isaLevel": "Equipment",
-      "topic_mapping": "ALAT/Sassenage/Curie/BMS/HVAC/Ambience/Telemetry",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "euler",
-      "displayName": "Euler Building",
-      "typeId": "ALAT_BuildingType",
-      "parentId": "sassenage_site",
-      "isaLevel": "Area",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "euler_hvac",
-      "displayName": "Euler HVAC Ambience",
-      "typeId": "ALAT_AmbienceSensorType",
-      "parentId": "euler",
-      "isaLevel": "Equipment",
-      "topic_mapping": "ALAT/Sassenage/Euler/BMS/HVAC/Ambience/Telemetry",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "johnson",
-      "displayName": "Johnson Building",
-      "typeId": "ALAT_BuildingType",
-      "parentId": "sassenage_site",
-      "isaLevel": "Area",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "johnson_hvac",
-      "displayName": "Johnson HVAC Ambience",
-      "typeId": "ALAT_AmbienceSensorType",
-      "parentId": "johnson",
-      "isaLevel": "Equipment",
-      "topic_mapping": "ALAT/Sassenage/Johnson/BMS/HVAC/Ambience/Telemetry",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "facilities",
-      "displayName": "Site Facilities",
-      "parentId": "sassenage_site",
-      "isaLevel": "Area",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "meter_elec",
-      "displayName": "Global Electricity Meter",
-      "typeId": "ALAT_MeterType",
-      "parentId": "facilities",
-      "isaLevel": "Equipment",
-      "topic_mapping": "ALAT/Sassenage/Facilities/Metering/Global/Electricity",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "meter_gas",
-      "displayName": "Global Gas Meter",
-      "typeId": "ALAT_MeterType",
-      "parentId": "facilities",
-      "isaLevel": "Equipment",
-      "topic_mapping": "ALAT/Sassenage/Facilities/Metering/Global/Gas",
-      "namespaceUri": "https://airliquide.com/alat"
-    },
-    {
-      "elementId": "stark_malibu_hq",
-      "displayName": "Stark Malibu Headquarters",
-      "typeId": "SiteType",
-      "isaLevel": "Site",
-      "namespaceUri": "https://cesmii.org/i3x"
-    },
-    {
-      "elementId": "assembly_line_01",
-      "displayName": "Suit Assembly Line 01",
+      "elementId": "line_1",
+      "displayName": "Production Line 1",
       "typeId": "LineType",
-      "parentId": "stark_malibu_hq",
+      "parentId": "frankfurt_site",
       "isaLevel": "Line",
-      "topic_mapping": "stark_industries/malibu_facility/assembly_line_01/#",
+      "topic_mapping": "hydrochem/frankfurt/mes/line_1/status",
       "namespaceUri": "https://cesmii.org/i3x"
     },
     {
-      "elementId": "cavendish_bms_system",
-      "typeId": "BmsSystemType",
-      "displayName": "Logical management node for the Building Management System in the Cavendish facility.",
-      "topic_mapping": "ALAT/Sassenage/Cavendish/BMS/#",
-      "namespaceUri": "https://cesmii.org/i3x",
-      "isComposition": false,
-      "parentId": "cavendish"
+      "elementId": "drying_oven",
+      "displayName": "Drying Oven",
+      "typeId": "Hydrochem_DryingOvenType",
+      "parentId": "line_1",
+      "isaLevel": "Equipment",
+      "topic_mapping": "hydrochem/frankfurt/mes/line_1/drying_oven/telemetry",
+      "namespaceUri": "https://hydrochem-ag.com/uns"
     },
     {
-      "elementId": "cavendish_hvac_subsystem",
-      "typeId": "HvacSystemType",
-      "displayName": "Logical subsystem for HVAC controls and monitoring within the Cavendish BMS.",
-      "topic_mapping": "ALAT/Sassenage/Cavendish/BMS/HVAC/#",
+      "elementId": "coating_station",
+      "displayName": "Coating Station",
+      "typeId": "Hydrochem_CoatingType",
+      "parentId": "line_1",
+      "isaLevel": "Equipment",
+      "topic_mapping": "hydrochem/frankfurt/mes/line_1/coating/telemetry",
+      "namespaceUri": "https://hydrochem-ag.com/uns"
+    },
+    {
+      "elementId": "web_handling",
+      "displayName": "Web Handling Unit",
+      "typeId": "Hydrochem_WebHandlingType",
+      "parentId": "line_1",
+      "isaLevel": "Equipment",
+      "topic_mapping": "hydrochem/frankfurt/mes/line_1/web_handling/telemetry",
+      "namespaceUri": "https://hydrochem-ag.com/uns"
+    },
+    {
+      "elementId": "cleanroom_hvac",
+      "displayName": "Cleanroom HVAC",
+      "typeId": "Hydrochem_HvacType",
+      "parentId": "frankfurt_site",
+      "isaLevel": "Equipment",
+      "topic_mapping": "hydrochem/frankfurt/bms/hvac/cleanroom_area/telemetry",
+      "namespaceUri": "https://hydrochem-ag.com/uns"
+    },
+    {
+      "elementId": "main_substation",
+      "displayName": "Main Substation",
+      "typeId": "Hydrochem_ElectricalType",
+      "parentId": "frankfurt_site",
+      "isaLevel": "Equipment",
+      "topic_mapping": "hydrochem/frankfurt/bms/electrical/main_substation/telemetry",
+      "namespaceUri": "https://hydrochem-ag.com/uns"
+    },
+    {
+      "elementId": "frankfurt_bms",
+      "typeId": "BmsType",
+      "displayName": "Building Management System for the Frankfurt site, coordinating facilities and utilities.",
       "namespaceUri": "https://cesmii.org/i3x",
       "isComposition": false,
-      "parentId": "cavendish_bms_system"
+      "parentId": "frankfurt_site"
+    },
+    {
+      "elementId": "frankfurt_hvac_system",
+      "typeId": "HvacSystemType",
+      "displayName": "Centralized HVAC control system managed by the BMS.",
+      "namespaceUri": "https://cesmii.org/i3x",
+      "isComposition": false,
+      "parentId": "frankfurt_bms"
+    },
+    {
+      "elementId": "cleanroom_area",
+      "typeId": "CleanroomAreaType",
+      "displayName": "Physical cleanroom environment monitored for precise temperature and humidity control.",
+      "topic_mapping": "hydrochem/frankfurt/bms/hvac/cleanroom_area/telemetry",
+      "namespaceUri": "https://cesmii.org/i3x",
+      "isComposition": false,
+      "parentId": "frankfurt_hvac_system"
     }
   ],
+  "legacy_concepts": [],
   "relationshipTypes": [],
-  "legacy_concepts": []
+  "external_instances": []
 }
