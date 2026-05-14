@@ -1,5 +1,17 @@
 # Korelate Changelog
 
+## 2026-05-14 - Mobile UX Improvements & UNS Model Update
+- **Mobile UX & UI Polish**:
+    - **Voice Chat Fix**: Resolved a critical bug in `AiChatWidget` where voice transcripts were duplicated on Android devices. Improved state management for mic activation and input handling.
+    - **Responsive Layouts**: Fixed height and overflow issues in the Publish view panels on mobile screens. Removed arbitrary `min-height` that broke scrolling on smaller devices.
+    - **Sidebar Visibility**: Forced the sidebar toggle to hide correctly on mobile (`!important`) to ensure a cleaner interface, relying on the unified navigation.
+- **UNS Model Overhaul**:
+    - Migrated the default `uns_model.json` from generic examples to the **HyDroChem-AG** enterprise model (Frankfurt site).
+    - Updated all instances, types, and topic mappings to match the new HyDroChem-AG simulation scenario.
+- **Maintenance**:
+    - Fixed a minor typo ("repom") in the `simulator-hydrochem.js` author header.
+    - Updated `GEMINI.md` with latest RTK (Rust Token Killer) instructions for optimized development.
+
 ## 1.6.0 - Official Release - 2026-04-26
 This major release marks a significant milestone in Korelate's evolution, introducing full I3X protocol compliance, AI-driven semantic modeling, and a massive expansion of industrial and IT connectors.
 
