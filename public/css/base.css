@@ -141,7 +141,7 @@ body {
     color: var(--color-text-secondary);
     border-left: 3px solid transparent;
     transition: all 0.2s ease-in-out;
-    display: flex !important;
+    display: flex;
     flex-direction: row !important; /* Force strict horizontal layout */
     flex-wrap: nowrap !important; 
     align-items: center !important; 
@@ -738,7 +738,7 @@ body.dark-mode .is-file.mapped-target .node-name::before { filter: invert(80%) s
     
     /* Fix for Admin & Alerts Sub-Navigation on Mobile */
     .alerts-sub-nav {
-        display: flex !important;
+        display: flex;
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */

@@ -337,3 +337,9 @@ This major release marks a significant milestone in Korelate's evolution, introd
 - **CDM Modeler Fix**: Resolved a critical SVG namespace corruption in `view.modeler.js` that prevented the relationship graph from rendering.
 - **Documentation**: Updated `README.md` with the latest demonstration video and official release notes.
 - **Docker Integration**: Verified Docker build compatibility for edge deployment.
+
+## 2026-05-18 - UI Menu Visibility Fix
+- **Context**: Fixed an issue where disabled UI functions (menu entries) remained visible on the sidebar despite being disabled in configuration or due to insufficient role permissions.
+- **Core Functions Touched**: `public/css/base.css` (`.tab-button` and `.alerts-sub-nav`).
+- **Pitfalls & Solutions**: A previously introduced `display: flex !important;` CSS rule in `base.css` to stabilize flexbox layout was unintentionally overriding inline JavaScript modifications (`style.display = 'none'`) injected by `public/app.js`. Removed the `!important` flag to restore correct visibility toggling based on application configuration.
+
