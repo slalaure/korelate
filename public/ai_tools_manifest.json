@@ -216,16 +216,16 @@
                 ]
             }
         },
-        {
+       {
             "name": "update_uns_model",
-            "description": "Updates the content of the `uns_model.json` file. This allows adding new concepts or modifying existing schemas in the semantic model.",
+            "description": "Updates the content of the `uns_model.json` file. This allows adding new concepts or modifying existing schemas in the semantic model. The JSON MUST be an I3X/CESMII-compliant object containing 'namespaces', 'objectTypes', and 'instances' arrays.",
             "category": "ENABLE_ADMIN",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "model_json": {
                         "type": "string",
-                        "description": "The full JSON string representing the new model array. Must be a valid JSON array of definition objects."
+                        "description": "The full JSON string representing the new model. MUST be a JSON Object with 'namespaces', 'objectTypes', and 'instances'. DO NOT output a flat array."
                     }
                 },
                 "required": [
