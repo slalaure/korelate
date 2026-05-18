@@ -20,7 +20,7 @@ This image provides a self-contained, highly resilient, multi-protocol edge serv
 * **ETL Mapper Engine:** Create real-time data transformations (e.g., "Modbus Register -> MQTT Topic") using sandboxed JavaScript.
 * **Intelligent Alerting:** Define detection rules that trigger an Autonomous AI Agent to generate root-cause incident reports.
 * **Advanced Charting:** Build, save, and share custom time-series charts using backend aggregation for massive datasets.
-* **Agent Protocol (MCP):** Includes a Model Context Protocol server (`mcp_server.mjs`) to allow external LLMs or agents (like Claude) to query and control the factory context.
+* **Agent Protocol (MCP):** Includes a Model Context Protocol server (`interfaces/mcp/mcpServer.mjs`) to allow external LLMs or agents (like Claude) to query and control the factory context.
 * **Secure & Multi-Tenant:** Supports Local accounts, Google OAuth, and RBAC (Admin/User) to protect destructive actions.
 
 ---
@@ -75,7 +75,7 @@ services:
       - MAIN_APP_HOST=korelate_app # Docker DNS name for the app service
       - PORT=8080
       - BASE_PATH=/
-    command: node mcp_server.mjs # Overrides the default command
+    command: node interfaces/mcp/mcpServer.mjs # Overrides the default command
     depends_on:
       - korelate_app
 ```
