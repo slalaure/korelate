@@ -157,6 +157,12 @@ export function confirmModal(title, message, confirmText = 'Confirm', isDanger =
         const content = document.createElement('div');
         content.className = 'generic-modal-content';
         
+        // Dynamically make the modal wider if it contains complex HTML like <pre> blocks
+        if (message.includes('<pre>')) {
+            content.style.maxWidth = '800px';
+            content.style.width = '90vw';
+        }
+        
         const titleEl = document.createElement('h3');
         titleEl.className = 'generic-modal-title';
         titleEl.textContent = title;

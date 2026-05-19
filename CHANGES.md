@@ -365,3 +365,9 @@ This major release marks a significant milestone in Korelate's evolution, introd
 - **Root Cause**: The backend `test-connection` endpoint used `Promise.race` to enforce a timeout, but failed to check the actual boolean resolution value returned by the provider's `connect()` method. A `false` resolution did not throw an error, leading the API to assume success.
 - **Solution**: Explicitly check `if (connectResult === false)` in `interfaces/web/configApi.js` and throw a structured error so the frontend correctly displays "Failed".
 
+## 2026-05-19 - Fix AI Chat Confirmation Modal UI
+- **UI Overlay Fix**: Increased the `z-index` of the `.generic-modal-backdrop` (from 10,000 to 30,000) so that confirmation dialogs triggered by the AI Chat Widget appear correctly *above* the chat panel instead of being partially hidden behind it.
+- **Improved JSON Readability**: Modified the `confirmModal` utility to dynamically expand its maximum width to 800px when displaying complex code/HTML blocks (like `<pre>`).
+- **Tool Call Arguments Formatting**: Updated the `ai-chat-widget.js` to format the AI's requested JSON arguments using a proper code block with `white-space: pre-wrap`, better padding, and syntax colors, making it much easier for admins to review and approve complex actions.
+- **Files Touched**: `public/css/base.css`, `public/utils.js`, `public/components/ai-chat-widget.js`.
+

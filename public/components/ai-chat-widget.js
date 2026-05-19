@@ -479,9 +479,9 @@ class AiChatWidget extends HTMLElement {
                 argsStr = JSON.stringify(args, null, 2);
             } catch(e) { argsStr = t.function.arguments; }
             
-            html += `<li style="margin-bottom: 10px;">
-                <b>${this.sanitize(t.function.name)}</b>
-                <pre style="background: var(--color-bg-secondary); padding: 5px; border-radius: 4px; max-height: 150px; overflow-y: auto;"><code>${this.sanitize(argsStr)}</code></pre>
+            html += `<li style="margin-bottom: 15px;">
+                <b style="color: var(--color-primary); display: inline-block; margin-bottom: 5px;">${this.sanitize(t.function.name)}</b>
+                <pre style="background: var(--color-code-bg); color: var(--color-code-text); padding: 12px; border-radius: 6px; max-height: 300px; overflow-y: auto; overflow-x: auto; font-family: var(--font-mono); font-size: 0.9em; white-space: pre-wrap; word-wrap: break-word; border: 1px solid var(--color-border-secondary); margin: 0;"><code>${this.sanitize(argsStr)}</code></pre>
             </li>`;
         });
         html += '</ul></div>';
