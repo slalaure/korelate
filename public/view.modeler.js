@@ -674,6 +674,64 @@ function setEditMode(mode) {
 // NATIVE KORELATE GRAPH ENGINE (SVG Force-Directed)
 // ============================================================================
 
+function getColorForString(str, isDark) {
+    if (!str) return isDark ? '#2c2c2c' : '#f8f9fa';
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    // Lower saturation for a professional, pastel background
+    const lightness = isDark ? 20 : 94; 
+    return `hsl(${hue}, 35%, ${lightness}%)`;
+}
+
+function getEdgeColor(label, isDark) {
+    if (!label) return isDark ? '#555' : '#aaa';
+    const predefined = {
+        'belongs to': isDark ? '#3391ff' : '#007bff', // Primary
+        'ChildOf': isDark ? '#d29922' : '#ca8a04',    // Warning
+        'InstanceOf': isDark ? '#98c379' : '#28a745', // Success
+        'Implements': isDark ? '#03dac6' : '#27ae60'  // Mapped Target
+    };
+    if (predefined[label]) return predefined[label];
+    
+    let hash = 0;
+    for (let i = 0; i < label.length; i++) {
+        hash = label.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    return `hsl(${hue}, 50%, ${isDark ? 60 : 45}%)`;
+}
+
+function getNodeStyles(refItem, group, isDark) {
+    let color = isDark ? '#333' : '#f4f7f9';
+    let fontColor = isDark ? '#e0e0e0' : '#333';
+    let borderColor = isDark ? '#444' : '#ddd';
+    let borderWidth = '2';
+    let borderStyle = 'solid';
+
+    if (group === 'ns') {
+        const nsUri = refItem?.uri || refItem?.namespaceUri || 'unknown';
+        color = getColorForString(nsUri, isDark);
+        // Namespace: App Primary Theme (Blue)
+        borderColor = isDark ? '#3391ff' : '#007bff';
+    } else if (group === 'type') {
+        const typeId = refItem?.elementId || 'unknown';
+        color = getColorForString(typeId, isDark);
+        // Type: App Source Theme (Purple)
+        borderColor = isDark ? '#bb86fc' : '#8e44ad';
+    } else if (group === 'inst') {
+        const typeId = refItem?.typeId || 'unknown';
+        color = getColorForString(typeId, isDark);
+        // Instance: App Target Theme (Green/Teal)
+        borderColor = isDark ? '#03dac6' : '#27ae60';
+        borderStyle = 'dashed'; // Dashed is cleaner than dotted
+    }
+
+    return { color, fontColor, borderColor, borderWidth, borderStyle };
+}
+
 class KorelateGraph {
     constructor(container, data, options) {
         this.container = container;
@@ -733,6 +791,9 @@ class KorelateGraph {
                 width: 140, height: 36,
                 color: n.color || '#fff',
                 fontColor: n.fontColor || '#333',
+                borderColor: n.borderColor || '#999',
+                borderWidth: n.borderWidth || '1',
+                borderStyle: n.borderStyle || 'solid',
                 isCenter: n.id === 'self'
             };
             this.nodes.push(node);
@@ -750,8 +811,11 @@ class KorelateGraph {
             rect.setAttribute('y', -node.height/2);
             rect.setAttribute('rx', 6);
             rect.setAttribute('fill', node.color);
-            rect.setAttribute('stroke', node.isCenter ? '#0056b3' : '#999');
-            rect.setAttribute('stroke-width', node.isCenter ? '2' : '1');
+            rect.setAttribute('stroke', node.borderColor);
+            rect.setAttribute('stroke-width', node.borderWidth);
+            if (node.borderStyle === 'dotted') {
+                rect.setAttribute('stroke-dasharray', '4, 4');
+            }
             
             const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
             text.setAttribute('text-anchor', 'middle');
@@ -778,10 +842,30 @@ class KorelateGraph {
                 const edge = { source, target, label: e.label || '' };
                 this.edges.push(edge);
                 
+                const edgeColor = e.color || '#888';
+
                 const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute('stroke', '#888');
+                line.setAttribute('stroke', edgeColor);
                 line.setAttribute('stroke-width', '2');
-                line.setAttribute('marker-end', 'url(#korelate-arrow)');
+                
+                const colorId = edgeColor.replace(/[^a-zA-Z0-9]/g, '');
+                let marker = this.svg.querySelector(`#arrow-${colorId}`);
+                if (!marker) {
+                    marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+                    marker.setAttribute('id', `arrow-${colorId}`);
+                    marker.setAttribute('viewBox', "0 0 10 10");
+                    marker.setAttribute('refX', "28");
+                    marker.setAttribute('refY', "5");
+                    marker.setAttribute('markerWidth', "6");
+                    marker.setAttribute('markerHeight', "6");
+                    marker.setAttribute('orient', "auto-start-reverse");
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute('d', "M 0 0 L 10 5 L 0 10 z");
+                    path.setAttribute('fill', edgeColor);
+                    marker.appendChild(path);
+                    this.svg.querySelector('defs').appendChild(marker);
+                }
+                line.setAttribute('marker-end', `url(#arrow-${colorId})`);
                 
                 const labelBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 labelBg.setAttribute('fill', state.isDarkMode ? '#1e1e1e' : '#fff');
@@ -790,7 +874,7 @@ class KorelateGraph {
                 const labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 labelText.setAttribute('text-anchor', 'middle');
                 labelText.setAttribute('dominant-baseline', 'central');
-                labelText.setAttribute('fill', '#888');
+                labelText.setAttribute('fill', edgeColor);
                 labelText.setAttribute('font-size', '10px');
                 labelText.setAttribute('font-family', 'sans-serif');
                 labelText.textContent = edge.label;
@@ -988,51 +1072,60 @@ function drawGraph() {
     if (!item) return;
 
     const isDark = state.isDarkMode;
-    const nodes = [{ id: 'self', label: item.displayName || 'Selected', color: '#007bff', fontColor: '#fff' }];
+    
+    let selfGroup = 'inst';
+    if (currentSelection.type === 'namespace') selfGroup = 'ns';
+    else if (currentSelection.type === 'objectType') selfGroup = 'type';
+    
+    const selfStyles = getNodeStyles(item, selfGroup, isDark);
+    
+    const nodes = [{ 
+        id: 'self', 
+        label: item.displayName || 'Selected', 
+        ...selfStyles 
+    }];
     const edges = [];
 
-    const addNode = (id, label, icon, group) => {
+    const addNode = (id, label, icon, group, refItem) => {
         if (!nodes.find(n => n.id === id)) {
-            let color = isDark ? '#333' : '#eee';
-            let fontColor = isDark ? '#fff' : '#333';
-            if (group === 'ns') { color = '#3b82f6'; fontColor = '#fff'; }
-            else if (group === 'type') { color = '#28a745'; fontColor = '#fff'; }
-            nodes.push({ id, label: `${icon} ${label}`, color, fontColor });
+            const styles = getNodeStyles(refItem, group, isDark);
+            nodes.push({ id, label: `${icon} ${label}`, ...styles });
         }
     };
 
     if (item.namespaceUri) {
-        addNode('ns', item.namespaceUri.split('/').pop(), ICONS.ns, 'ns');
-        edges.push({ from: 'self', to: 'ns', label: 'belongs to' });
+        const nsObj = currentModel.namespaces.find(n => n.uri === item.namespaceUri) || { uri: item.namespaceUri };
+        addNode('ns', item.namespaceUri.split('/').pop(), ICONS.ns, 'ns', nsObj);
+        edges.push({ from: 'self', to: 'ns', label: 'belongs to', color: getEdgeColor('belongs to', isDark) });
     }
 
     if (currentSelection.type === 'instance') {
         if (item.parentId && item.parentId !== '/') {
-            const p = currentModel.instances.find(i => i.elementId === item.parentId);
-            addNode('parent', p ? (p.displayName || p.elementId) : item.parentId, ICONS.inst, 'inst');
-            edges.push({ from: 'self', to: 'parent', label: 'ChildOf' });
+            const p = currentModel.instances.find(i => i.elementId === item.parentId) || { elementId: item.parentId };
+            addNode('parent', p.displayName || p.elementId, ICONS.inst, 'inst', p);
+            edges.push({ from: 'self', to: 'parent', label: 'ChildOf', color: getEdgeColor('ChildOf', isDark) });
         }
         if (item.typeId) {
-            const t = currentModel.objectTypes.find(ot => ot.elementId === item.typeId);
-            addNode('type', t ? (t.displayName || t.elementId) : item.typeId, ICONS.type, 'type');
-            edges.push({ from: 'self', to: 'type', label: 'InstanceOf' });
+            const t = currentModel.objectTypes.find(ot => ot.elementId === item.typeId) || { elementId: item.typeId };
+            addNode('type', t.displayName || t.elementId, ICONS.type, 'type', t);
+            edges.push({ from: 'self', to: 'type', label: 'InstanceOf', color: getEdgeColor('InstanceOf', isDark) });
         }
         if (item.relationships) {
             Object.entries(item.relationships).forEach(([rel, targets]) => {
                 const list = Array.isArray(targets) ? targets : [targets];
                 list.forEach(tId => {
-                    const tObj = currentModel.instances.find(i => i.elementId === tId);
-                    const label = tObj ? (tObj.displayName || tId) : tId;
-                    addNode(`rel-${tId}`, label, ICONS.inst, 'inst');
-                    edges.push({ from: 'self', to: `rel-${tId}`, label: rel });
+                    const tObj = currentModel.instances.find(i => i.elementId === tId) || { elementId: tId, typeId: 'unknown' };
+                    const label = tObj.displayName || tId;
+                    addNode(`rel-${tId}`, label, ICONS.inst, 'inst', tObj);
+                    edges.push({ from: 'self', to: `rel-${tId}`, label: rel, color: getEdgeColor(rel, isDark) });
                 });
             });
         }
     } else if (currentSelection.type === 'objectType') {
         const instances = currentModel.instances.filter(i => i.typeId === item.elementId).slice(0, 10);
         instances.forEach(i => {
-            addNode(`inst-${i.elementId}`, i.displayName || i.elementId, ICONS.inst, 'inst');
-            edges.push({ from: `inst-${i.elementId}`, to: 'self', label: 'Implements' });
+            addNode(`inst-${i.elementId}`, i.displayName || i.elementId, ICONS.inst, 'inst', i);
+            edges.push({ from: `inst-${i.elementId}`, to: 'self', label: 'Implements', color: getEdgeColor('Implements', isDark) });
         });
     }
 

@@ -371,3 +371,11 @@ This major release marks a significant milestone in Korelate's evolution, introd
 - **Tool Call Arguments Formatting**: Updated the `ai-chat-widget.js` to format the AI's requested JSON arguments using a proper code block with `white-space: pre-wrap`, better padding, and syntax colors, making it much easier for admins to review and approve complex actions.
 - **Files Touched**: `public/css/base.css`, `public/utils.js`, `public/components/ai-chat-widget.js`.
 
+## 2026-05-19 - Polish Data Modeler Visual Theme
+- **UI & UX Improvement**: Revamped the color scheme of the `KorelateGraph` in the Data Modeler (`public/view.modeler.js`) to align with the application's professional color palette.
+- **Node Styles**: Replaced aggressive, high-saturation colors with subtle pastel backgrounds. Reduced border widths from 3px to 2px. Replaced `dotted` borders with a cleaner `dashed` style for Instance objects.
+- **Semantic Borders & Edges**: Mapped node border colors and relationship edge colors directly to Korelate's core themes:
+  - **Namespaces** (`belongs to`): Primary Blue (`#007bff` / `#3391ff`)
+  - **Types** (`ChildOf`): Source Purple/Yellow (`#8e44ad` / `#bb86fc`)
+  - **Instances** (`InstanceOf` / `Implements`): Target Green/Teal (`#27ae60` / `#03dac6`)
+
