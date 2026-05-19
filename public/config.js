@@ -568,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const providerConfig = buildProviderConfigFromForm();
 
             try {
-                const response = await fetch('api/config/test-connection', {
+                const response = await fetch('api/env/test-connection', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(providerConfig)
