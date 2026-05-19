@@ -343,3 +343,14 @@ This major release marks a significant milestone in Korelate's evolution, introd
 - **Core Functions Touched**: `public/css/base.css` (`.tab-button` and `.alerts-sub-nav`).
 - **Pitfalls & Solutions**: A previously introduced `display: flex !important;` CSS rule in `base.css` to stabilize flexbox layout was unintentionally overriding inline JavaScript modifications (`style.display = 'none'`) injected by `public/app.js`. Removed the `!important` flag to restore correct visibility toggling based on application configuration.
 
+## 2026-05-19 - Persistent Admin System Logs Panel
+- **System Logs Relocation**: 
+    - Removed the 'System Logs' tab from the Admin View to free up space and provide a more 'IDE-like' experience.
+    - Implemented a persistent, resizable 'System Logs' panel at the bottom of the screen, accessible only to Admin users.
+- **VSCode-Style Toggle**: Added a small, fixed button in the bottom-left corner (similar to VSCode's bottom panel toggle) to show/hide the logs.
+- **UI Components & UX**: 
+    - Updated `AdminLogsPanel` web component to support flexible heights and removed hardcoded values.
+    - Implemented a custom resizer for the logs panel to allow users to expand it upwards.
+    - The panel state (visible/hidden) and height are managed in `app.js` with admin-only guards.
+- **Files Modified**: `public/index.html`, `public/html/view.admin.html`, `public/app.js`, `public/components/admin-logs-panel.js`, and `public/css/system-logs.css`.
+

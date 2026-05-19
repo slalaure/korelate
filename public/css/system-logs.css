@@ -1,0 +1,121 @@
+/* public/css/system-logs.css */
+
+.system-logs-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--color-bg-secondary);
+    border-top: 1px solid var(--color-border);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+.system-logs-container.visible {
+    transform: translateY(0);
+}
+
+.system-logs-resizer {
+    height: 4px;
+    background: transparent;
+    cursor: ns-resize;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+}
+
+.system-logs-resizer:hover {
+    background: var(--color-primary);
+}
+
+.system-logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 15px;
+    background-color: var(--color-bg-tertiary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.system-logs-header h3 {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.system-logs-content {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 0;
+}
+
+/* Reusing styles from AdminLogsPanel but adapted */
+.system-logs-content admin-logs-panel {
+    display: block;
+    height: 100%;
+}
+
+/* Override admin-logs-panel internal styles if needed */
+.system-logs-content admin-logs-panel .payload-header {
+    display: none; /* Hide internal header as we have ours */
+}
+
+.system-logs-content admin-logs-panel > div:last-child {
+    height: 100% !important;
+    padding: 10px !important;
+    border-radius: 0 !important;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+.system-logs-content admin-logs-panel pre {
+    height: 100% !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: var(--color-code-bg) !important;
+}
+
+/* Toggle Button - VSCode style */
+.btn-logs-toggle {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 30px;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-bottom: none;
+    border-left: none;
+    z-index: 1002;
+    display: none; /* Hidden by default, shown for admin */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    border-top-right-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-logs-toggle:hover {
+    color: var(--color-primary);
+    background-color: var(--color-bg-accent);
+}
+
+.btn-logs-toggle svg {
+    width: 16px;
+    height: 16px;
+}
+
+body.logs-panel-open .btn-logs-toggle {
+    bottom: 300px; /* This will be updated by JS if resized */
+}

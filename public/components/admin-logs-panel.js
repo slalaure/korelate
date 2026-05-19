@@ -41,8 +41,8 @@ class AdminLogsPanel extends HTMLElement {
                 </div>
                 <button id="btn-logs-refresh" class="mapper-button">Refresh Logs</button>
             </div>
-            <div style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 8px; padding: 20px;">
-                <pre id="admin-logs-content" style="background-color: var(--color-code-bg); color: var(--color-code-text); padding: 15px; border-radius: 4px; height: 500px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; font-size: 0.85em; white-space: pre-wrap; word-wrap: break-word;">Loading logs...</pre>
+            <div style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 8px; padding: 20px; height: calc(100% - 80px); box-sizing: border-box;">
+                <pre id="admin-logs-content" style="background-color: var(--color-code-bg); color: var(--color-code-text); padding: 15px; border-radius: 4px; height: 100%; overflow-y: auto; font-family: 'Courier New', Courier, monospace; font-size: 0.85em; white-space: pre-wrap; word-wrap: break-word;">Loading logs...</pre>
             </div>
         `;
 

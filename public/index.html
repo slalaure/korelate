@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/view.publish.css"> 
     <link rel="stylesheet" href="css/view.chat.css"> 
     <link rel="stylesheet" href="css/view.alerts.css"> 
+    <link rel="stylesheet" href="css/system-logs.css"> 
     <script src="libs/chart-min.js"></script>
     <script src="libs/chartjs-adapter-date-fns-min.js"></script>
     <script src="libs/hammer.min.js"></script>
@@ -320,6 +321,22 @@
             <main id="admin-view" class="view" style="flex-direction: column; overflow: hidden; padding: 0;"></main>
         </div>
     </div>
+
+    <div id="system-logs-panel" class="system-logs-container">
+        <div class="system-logs-resizer" id="logs-resizer"></div>
+        <div class="system-logs-header">
+            <h3>System Logs</h3>
+            <button id="btn-logs-close" class="tool-button" style="border:none; background:transparent; font-size:1.2em; cursor:pointer;">&times;</button>
+        </div>
+        <div class="system-logs-content">
+            <admin-logs-panel id="persistent-logs-panel"></admin-logs-panel>
+        </div>
+    </div>
+
+    <button id="btn-logs-toggle" class="btn-logs-toggle" title="Toggle System Logs">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+    </button>
+
     <ai-chat-widget></ai-chat-widget>
     
     <div id="delete-rule-modal-backdrop" class="modal-backdrop" style="display: none;">
