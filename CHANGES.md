@@ -360,3 +360,8 @@ This major release marks a significant milestone in Korelate's evolution, introd
 - **Backend Support**: Implemented a new `POST /api/env/test-connection` endpoint that dynamically instantiates a temporary connector, attempts a connection, and gracefully tears it down without affecting the running application state.
 - **Core Functions Touched**: `interfaces/web/configApi.js`, `public/config.js`.
 
+## 2026-05-19 - Fix Provider Connection Test False Positives
+- **Bug Fix**: Fixed an issue where the "Test Connection" button would always report "Success" even if the data provider failed to connect (e.g. bad credentials or wrong IP).
+- **Root Cause**: The backend `test-connection` endpoint used `Promise.race` to enforce a timeout, but failed to check the actual boolean resolution value returned by the provider's `connect()` method. A `false` resolution did not throw an error, leading the API to assume success.
+- **Solution**: Explicitly check `if (connectResult === false)` in `interfaces/web/configApi.js` and throw a structured error so the frontend correctly displays "Failed".
+

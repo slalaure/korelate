@@ -219,12 +219,20 @@ module.exports = (envPath, envExamplePath, dataPath, logger, db, dataManager, ap
             );
 
             try {
-                await Promise.race([providerInstance.connect(), timeoutPromise]);
+                const connectResult = await Promise.race([providerInstance.connect(), timeoutPromise]);
                 
-                // If it resolves without throwing, we consider it a success (or at least no immediate failure)
+                if (connectResult === false) {
+                    throw new Error(`Provider failed to connect. Check logs for details.`);
+                }
+
+                // If it resolves without throwing and isn't explicitly false, we consider it a success.
                 // However, some providers might connect asynchronously. We check the 'connected' flag if available,
                 // but some providers don't set it immediately. We'll wait a tiny bit to catch immediate errors.
                 await new Promise(r => setTimeout(r, 500));
+                
+                if (providerInstance.connected === false && connectResult !== true) {
+                     throw new Error(`Provider disconnected immediately after connection.`);
+                }
                 
                 // Cleanup
                 await providerInstance.disconnect();
