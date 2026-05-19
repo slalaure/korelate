@@ -354,3 +354,9 @@ This major release marks a significant milestone in Korelate's evolution, introd
     - The panel state (visible/hidden) and height are managed in `app.js` with admin-only guards.
 - **Files Modified**: `public/index.html`, `public/html/view.admin.html`, `public/app.js`, `public/components/admin-logs-panel.js`, and `public/css/system-logs.css`.
 
+## 2026-05-19 - Data Provider Connection Testing
+- **Config Wizard Enhancement**: Added a "Test Connection" button in the Data Provider builder modal (`public/config.html`).
+- **Real-Time Validation**: Users can now verify credentials and network connectivity (MQTT, SQL, OPC UA, etc.) before saving a new or updated connector.
+- **Backend Support**: Implemented a new `POST /api/config/test-connection` endpoint that dynamically instantiates a temporary connector, attempts a connection, and gracefully tears it down without affecting the running application state.
+- **Core Functions Touched**: `interfaces/web/configApi.js`, `public/config.js`.
+

@@ -921,9 +921,15 @@
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top: 20px;">
-                    <button type="button" id="btn-prov-cancel" class="tool-button">Cancel</button>
-                    <button type="submit" class="tool-button button-primary">Save Provider</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 20px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" id="btn-prov-test" class="tool-button" style="border-color: var(--color-primary); color: var(--color-primary);">Test Connection</button>
+                        <span id="prov-test-status" style="font-size: 0.85em; font-weight: bold;"></span>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" id="btn-prov-cancel" class="tool-button">Cancel</button>
+                        <button type="submit" class="tool-button button-primary">Save Provider</button>
+                    </div>
                 </div>
             </form>
         </div>

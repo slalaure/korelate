@@ -317,6 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
         editingProviderIndex = parseInt(index);
         document.getElementById('provider-modal-title').textContent = index >= 0 ? "Edit Provider" : "Add Provider";
         providerBuilderForm.reset();
+        if (provTestStatus) {
+            provTestStatus.textContent = '';
+        }
         
         if (index >= 0) {
             const p = providersList[index];
@@ -426,15 +429,16 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCloseProviderHelp.onclick = () => { providerHelpModal.style.display = 'none'; };
     providerHelpModal.onclick = (e) => { if (e.target === providerHelpModal) providerHelpModal.style.display = 'none'; };
 
-    providerBuilderForm.onsubmit = (e) => {
-        e.preventDefault();
+    const btnProvTest = document.getElementById('btn-prov-test');
+    const provTestStatus = document.getElementById('prov-test-status');
+
+    function buildProviderConfigFromForm() {
         const type = provTypeSelect.value;
-        
         const subStr = document.getElementById('prov-subscribe').value;
         const pubStr = document.getElementById('prov-publish').value;
 
         const newProv = {
-            id: document.getElementById('prov-id').value.trim(),
+            id: document.getElementById('prov-id').value.trim() || 'test_provider_' + Date.now(),
             type: type,
             subscribe: subStr ? subStr.split(',').map(s=>s.trim()).filter(Boolean) : [],
             publish: pubStr ? pubStr.split(',').map(s=>s.trim()).filter(Boolean) : []
@@ -551,6 +555,54 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('prov-kafka-clientid').value) newProv.options.clientId = document.getElementById('prov-kafka-clientid').value.trim();
             if (document.getElementById('prov-kafka-groupid').value) newProv.options.groupId = document.getElementById('prov-kafka-groupid').value.trim();
         }
+        
+        return newProv;
+    }
+
+    if (btnProvTest) {
+        btnProvTest.onclick = async () => {
+            provTestStatus.textContent = "Testing...";
+            provTestStatus.style.color = "var(--color-text-secondary)";
+            btnProvTest.disabled = true;
+
+            const providerConfig = buildProviderConfigFromForm();
+
+            try {
+                const response = await fetch('api/config/test-connection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(providerConfig)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    provTestStatus.textContent = "✅ Success";
+                    provTestStatus.style.color = "var(--color-success)";
+                } else {
+                    provTestStatus.textContent = "❌ " + (data.error || "Failed");
+                    provTestStatus.style.color = "var(--color-danger)";
+                }
+            } catch (err) {
+                provTestStatus.textContent = "❌ Network error";
+                provTestStatus.style.color = "var(--color-danger)";
+            } finally {
+                btnProvTest.disabled = false;
+            }
+        };
+    }
+
+    providerBuilderForm.onsubmit = (e) => {
+        e.preventDefault();
+        
+        // Ensure ID is set for saving
+        if (!document.getElementById('prov-id').value.trim()) {
+            alert("Provider ID is required.");
+            return;
+        }
+
+        const newProv = buildProviderConfigFromForm();
+        newProv.id = document.getElementById('prov-id').value.trim(); // Override test ID
 
         if (editingProviderIndex >= 0) {
             providersList[editingProviderIndex] = newProv;

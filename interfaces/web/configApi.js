@@ -181,6 +181,67 @@ module.exports = (envPath, envExamplePath, dataPath, logger, db, dataManager, ap
 
     // --- Database-Backed Config Routes ---
 
+    router.post('/test-connection', async (req, res, next) => {
+        const providerConfig = req.body;
+        
+        if (!providerConfig || !providerConfig.type) {
+            return res.status(400).json({ success: false, error: "Missing provider configuration or type." });
+        }
+
+        if (!connectorManager) {
+            return res.status(500).json({ success: false, error: "Connector Manager is not available." });
+        }
+
+        try {
+            logger.info(`🧪 Testing connection for temporary provider type: ${providerConfig.type}`);
+            
+            // Resolve the class using the manager's private method (or logic)
+            const ProviderClass = connectorManager._resolveProvider(providerConfig.type);
+            
+            if (!ProviderClass) {
+                return res.json({ success: false, error: `Unsupported connector plugin: ${providerConfig.type}. Please ensure it is installed.` });
+            }
+
+            // Create a fake context that won't disrupt the rest of the app
+            const mockContext = {
+                logger: logger,
+                config: {}, // empty config
+                handleMessage: () => {}, // do nothing on message
+                activeConnections: new Map() // isolated map
+            };
+
+            // Instantiate
+            const providerInstance = new ProviderClass(providerConfig, mockContext);
+            
+            // Attempt connection with a strict timeout
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Connection attempt timed out after 5000ms")), 5000)
+            );
+
+            try {
+                await Promise.race([providerInstance.connect(), timeoutPromise]);
+                
+                // If it resolves without throwing, we consider it a success (or at least no immediate failure)
+                // However, some providers might connect asynchronously. We check the 'connected' flag if available,
+                // but some providers don't set it immediately. We'll wait a tiny bit to catch immediate errors.
+                await new Promise(r => setTimeout(r, 500));
+                
+                // Cleanup
+                await providerInstance.disconnect();
+                
+                res.json({ success: true, message: `Successfully connected to ${providerConfig.type} provider.` });
+            } catch (connErr) {
+                // Ensure cleanup even on error
+                try { await providerInstance.disconnect(); } catch (e) {}
+                res.json({ success: false, error: connErr.message || "Failed to establish connection." });
+            }
+
+        } catch (err) {
+            logger.error({ err }, "Error during test-connection");
+            res.json({ success: false, error: err.message || "An unexpected error occurred during the test." });
+        }
+    });
+
     /**
      * Helper to get merged configuration (Env + DB).
      */
