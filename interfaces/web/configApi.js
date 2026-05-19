@@ -207,7 +207,9 @@ module.exports = (envPath, envExamplePath, dataPath, logger, db, dataManager, ap
                 logger: logger,
                 config: {}, // empty config
                 handleMessage: () => {}, // do nothing on message
-                activeConnections: new Map() // isolated map
+                activeConnections: new Map(), // isolated map
+                isShuttingDown: () => false,
+                CERTS_PATH: certsPath
             };
 
             // Instantiate

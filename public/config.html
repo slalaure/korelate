@@ -7,6 +7,8 @@
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/config.css">
+    <link rel="stylesheet" href="css/system-logs.css">
+    <script type="module" src="components/admin-logs-panel.js"></script>
     <style>
         /* Shared Styles */
         .cert-manager, .model-manager, .database-manager {
@@ -938,6 +940,21 @@
     <footer class="app-footer" style="margin-top: 40px; border-top: 1px solid var(--color-border); background-color: var(--color-bg-secondary); padding: 15px;">
         <p style="margin: 0; color: var(--color-text-secondary);">Clone me, enhance me, read documentation or request features on <a href="https://github.com/slalaure/korelate" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); font-weight: 500;">github</a></p>
     </footer>
+
+    <div id="system-logs-panel" class="system-logs-container">
+        <div class="system-logs-resizer" id="logs-resizer"></div>
+        <div class="system-logs-header">
+            <h3>System Logs</h3>
+            <button id="btn-logs-close" class="tool-button" style="border:none; background:transparent; font-size:1.2em; cursor:pointer;">&times;</button>
+        </div>
+        <div class="system-logs-content">
+            <admin-logs-panel id="persistent-logs-panel"></admin-logs-panel>
+        </div>
+    </div>
+
+    <button id="btn-logs-toggle" class="btn-logs-toggle" title="Toggle System Logs">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+    </button>
 
     <script type="module" src="config.js"></script>
 </body>

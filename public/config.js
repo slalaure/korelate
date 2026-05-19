@@ -16,6 +16,62 @@ document.addEventListener('DOMContentLoaded', () => {
     let editingProviderIndex = -1;
     let availableCertFiles = [];
 
+    // Initialize System Logs Panel
+    initSystemLogs();
+
+    function initSystemLogs() {
+        const logsPanel = document.getElementById('system-logs-panel');
+        const btnLogsToggle = document.getElementById('btn-logs-toggle');
+        const btnLogsClose = document.getElementById('btn-logs-close');
+        const resizer = document.getElementById('logs-resizer');
+        const persistentPanel = document.getElementById('persistent-logs-panel');
+
+        if (!logsPanel || !btnLogsToggle) return;
+
+        btnLogsToggle.style.display = 'flex';
+
+        const toggleLogs = (force) => {
+            const isVisible = force !== undefined ? force : !logsPanel.classList.contains('visible');
+            logsPanel.classList.toggle('visible', isVisible);
+            document.body.classList.toggle('logs-panel-open', isVisible);
+            
+            if (isVisible) {
+                persistentPanel?.loadSystemLogs();
+                btnLogsToggle.style.bottom = `${logsPanel.offsetHeight}px`;
+            } else {
+                btnLogsToggle.style.bottom = '0';
+            }
+        };
+
+        btnLogsToggle.onclick = () => toggleLogs();
+        btnLogsClose.onclick = () => toggleLogs(false);
+
+        let isResizing = false;
+        resizer.onmousedown = (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'ns-resize';
+            e.preventDefault();
+        };
+
+        document.onmousemove = (e) => {
+            if (!isResizing) return;
+            const newHeight = window.innerHeight - e.clientY;
+            if (newHeight > 50 && newHeight < window.innerHeight * 0.8) {
+                logsPanel.style.height = `${newHeight}px`;
+                if (logsPanel.classList.contains('visible')) {
+                    btnLogsToggle.style.bottom = `${newHeight}px`;
+                }
+            }
+        };
+
+        document.onmouseup = () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+            }
+        };
+    }
+
     // --- DOM Elements: Core ---
     const btnModeWizard = document.getElementById('btn-mode-wizard');
     const btnModeAdvanced = document.getElementById('btn-mode-advanced');
