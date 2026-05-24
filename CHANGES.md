@@ -379,3 +379,8 @@ This major release marks a significant milestone in Korelate's evolution, introd
   - **Types** (`ChildOf`): Source Purple/Yellow (`#8e44ad` / `#bb86fc`)
   - **Instances** (`InstanceOf` / `Implements`): Target Green/Teal (`#27ae60` / `#03dac6`)
 
+## 2026-05-19 - MCP Server Backward Compatibility
+- **Bug Fix**: Restored `mcp_server.mjs` at the project root as a backward-compatibility wrapper.
+- **Context**: The MCP server was recently relocated to `interfaces/mcp/mcpServer.mjs`. This relocation broke older Docker cached configurations, running containers, or external Agent configurations (like Claude Desktop) that were hardcoded to start the server using the old path `node /usr/src/app/mcp_server.mjs`.
+- **Solution**: Added a simple ESM wrapper at the root that imports the new location to ensure zero downtime and prevent `MODULE_NOT_FOUND` crashes for existing setups.
+
