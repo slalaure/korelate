@@ -15,8 +15,7 @@
  * [UPDATED] Integrated Vanilla JS Proxy state manager for reactive UI updates and data-driven routing.
  * [UPDATED] Implemented WebSocket Backpressure UI Feedback for high data rates.
  * [UPDATED] Decoupled WebSocket and Routing logic into dedicated modules.
- * [UPDATED] Fixed Router ViewCallbacks mapping for Mapper and Publish views.
- * [UPDATED] Strongly guarded view initialization and dynamic route generation based on config.
+ * [UPDATED] Supported chunked initial tree state loading to prevent backend OOM.
  */
 
 // ---  Module Imports ---
@@ -341,7 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedI3xObjects = [];
     let allKnownTopicsState = new Map(); // [NEW] Keep track of all topics ever seen
 
-    let mainTree, mapperTree, chartTree;    let mainPayloadViewer;
+    let mainTree, mapperTree, chartTree;    
+    let mainPayloadViewer;
     let selectedMainTreeNode = null; 
     let alertsEnabled = true;
 
@@ -503,7 +503,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     try { parsed = JSON.parse(payload); } catch(e) {}
                     state.activeView = 'alerts';
                     openCreateRuleModal(topic, parsed);
-                };            }
+                };            
+            }
         }
 
         sendWebSocketMessage({ type: 'get-topic-history', sourceId: sourceId, topic: topic });
@@ -752,9 +753,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     populateTreesFromHistory(); 
                     break;
                 case 'tree-initial-state':
+                case 'tree-initial-state-chunk':
+                    // [NEW] Handle chunks from the backend to prevent OOM
                     message.data.forEach(entry => {
                         allKnownTopicsState.set(`${entry.source_id || entry.sourceId}|${entry.topic}`, entry);
                     });
+                    break;
+                case 'tree-initial-state-end':
+                    // [NEW] Triggers once all chunks have arrived
                     if (mainTree) mainTree.rebuild(Array.from(allKnownTopicsState.values()));
                     if (mapperTree) mapperTree.rebuild(Array.from(allKnownTopicsState.values()));
                     if (chartTree) chartTree.rebuild(Array.from(allKnownTopicsState.values()));
@@ -763,7 +769,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     mapperTree?.buildI3xTree(cachedI3xObjects);
                     chartTree?.buildI3xTree(cachedI3xObjects);
                     
-                    colorAllMapperTrees(); colorChartTree();
+                    colorAllMapperTrees(); 
+                    colorChartTree();
                     break;
                 case 'topic-history-data': mainPayloadViewer.updateHistory(message.sourceId, message.topic, message.data); break;
                 case 'db-status-update':

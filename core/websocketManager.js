@@ -11,6 +11,7 @@
  * WebSocket Manager
  * Handles WebSocket server setup, client connections, and broadcasting.
  * [UPDATED] Implemented Backpressure on broadcast to prevent memory leaks.
+ * [UPDATED] Implemented Chunked Streaming for initial tree state to prevent OOM.
  */
 
 const { WebSocketServer } = require('ws');
@@ -134,7 +135,8 @@ function initWebSocketManager(server, database, appLogger, basePath, getDbCallba
             }
         });
 
-        // 3. Send initial tree state
+        // 3. Send initial tree state (Chunked to prevent OOM on large databases)
+        logger.info("[WS] Streaming initial tree state...");
         const treeStateQuery = `
             WITH RankedEvents AS (
                 SELECT *, ROW_NUMBER() OVER(PARTITION BY source_id, topic ORDER BY timestamp DESC) as rn
@@ -145,10 +147,27 @@ function initWebSocketManager(server, database, appLogger, basePath, getDbCallba
             WHERE rn = 1
             ORDER BY source_id, topic ASC;
         `;
-        db.all(treeStateQuery, (err, rows) => {
+        
+        let chunk = [];
+        const CHUNK_SIZE = 2000;
+
+        db.each(treeStateQuery, (err, row) => {
             if (!err && ws.readyState === ws.OPEN) {
-                const processedRows = rows.map(row => processRow(row));
-                ws.send(JSON.stringify({ type: 'tree-initial-state', data: processedRows }));
+                chunk.push(processRow(row));
+                if (chunk.length >= CHUNK_SIZE) {
+                    ws.send(JSON.stringify({ type: 'tree-initial-state-chunk', data: chunk }));
+                    chunk = [];
+                }
+            }
+        }, (err, count) => {
+            if (err) {
+                logger.error({ err }, "❌ Error fetching initial tree state.");
+            } else if (ws.readyState === ws.OPEN) {
+                if (chunk.length > 0) {
+                    ws.send(JSON.stringify({ type: 'tree-initial-state-chunk', data: chunk }));
+                }
+                ws.send(JSON.stringify({ type: 'tree-initial-state-end', count }));
+                logger.info(`[WS] Initial tree state sent in chunks (Total topics: ${count}).`);
             }
         });
 
