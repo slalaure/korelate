@@ -41,8 +41,12 @@ async function initDatabase(logger, config, paths, wsManager) {
                 userManager.ensureAdminUser(config.ADMIN_USERNAME, config.ADMIN_PASSWORD);
             }
             
-            // 3. Ensure tables exist
+            // 3. Ensure tables exist and enforce DuckDB memory limits
             db.exec(`
+                -- Prevent DuckDB from consuming all system RAM (OOM Killer protection)
+                PRAGMA memory_limit='1GB';
+                PRAGMA threads=2;
+                
                 -- Migration: Rename mqtt_events to korelate_events if it exists
                 -- We use a TRY/CATCH style or check existence first. 
                 -- DuckDB doesn't have RENAME TABLE IF EXISTS but we can check via pragma
@@ -70,7 +74,7 @@ async function initDatabase(logger, config, paths, wsManager) {
                 );
             `, (createErr) => {
                 if (createErr) {
-                    logger.error({ err: createErr }, "❌ FATAL: Failed to ensure tables exist.");
+                    logger.error({ err: createErr }, "❌ FATAL: Failed to ensure tables exist or set PRAGMAs.");
                     return reject(createErr); 
                 }
 

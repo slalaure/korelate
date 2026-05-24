@@ -11,7 +11,8 @@
  * WebSocket Manager
  * Handles WebSocket server setup, client connections, and broadcasting.
  * [UPDATED] Implemented Backpressure on broadcast to prevent memory leaks.
- * [UPDATED] Implemented Chunked Streaming for initial tree state to prevent OOM.
+ * [UPDATED] Removed payload from initial tree state to implement Lazy Loading and save RAM.
+ * [UPDATED] Replaced db.each with db.all and strictly chained callbacks to prevent DuckDB concurrency crashes (InvalidInputException).
  */
 
 const { WebSocketServer } = require('ws');
@@ -114,61 +115,54 @@ function initWebSocketManager(server, database, appLogger, basePath, getDbCallba
             }));
         }
 
-        // 1. Send DB Bounds
-        db.all("SELECT epoch_ms(MIN(timestamp)) as min_ts, epoch_ms(MAX(timestamp)) as max_ts FROM korelate_events", (err, rows) => {
-            if (!err && rows && rows.length > 0) {
-                const min = rows[0].min_ts ? Number(rows[0].min_ts) : 0;
-                const max = rows[0].max_ts ? Number(rows[0].max_ts) : Date.now();
+        // --- Strict Callback Chaining to prevent DuckDB concurrency crashes ---
+        // Step 1: Get DB Bounds
+        db.all("SELECT epoch_ms(MIN(timestamp)) as min_ts, epoch_ms(MAX(timestamp)) as max_ts FROM korelate_events", (err, boundsRows) => {
+            if (!err && boundsRows && boundsRows.length > 0) {
+                const min = boundsRows[0].min_ts ? Number(boundsRows[0].min_ts) : 0;
+                const max = boundsRows[0].max_ts ? Number(boundsRows[0].max_ts) : Date.now();
                 if (ws.readyState === ws.OPEN) {
                     ws.send(JSON.stringify({ type: 'db-bounds', min, max }));
                 }
             }
-        });
 
-        // 2. Send initial batch
-        logger.info("[WS] Fetching initial data batch (LIMIT 200)...");
-        db.all("SELECT timestamp, topic, payload, source_id FROM korelate_events ORDER BY timestamp DESC LIMIT 200", (err, rows) => {
-            if (err) logger.error({ err }, "❌ Error fetching initial data.");
-            else if (ws.readyState === ws.OPEN) {
-                const processedRows = rows.map(row => processRow(row));
-                ws.send(JSON.stringify({ type: 'history-initial-data', data: processedRows }));
-            }
-        });
-
-        // 3. Send initial tree state (Chunked to prevent OOM on large databases)
-        logger.info("[WS] Streaming initial tree state...");
-        const treeStateQuery = `
-            WITH RankedEvents AS (
-                SELECT *, ROW_NUMBER() OVER(PARTITION BY source_id, topic ORDER BY timestamp DESC) as rn
-                FROM korelate_events
-            )
-            SELECT topic, payload, timestamp, source_id
-            FROM RankedEvents
-            WHERE rn = 1
-            ORDER BY source_id, topic ASC;
-        `;
-        
-        let chunk = [];
-        const CHUNK_SIZE = 2000;
-
-        db.each(treeStateQuery, (err, row) => {
-            if (!err && ws.readyState === ws.OPEN) {
-                chunk.push(processRow(row));
-                if (chunk.length >= CHUNK_SIZE) {
-                    ws.send(JSON.stringify({ type: 'tree-initial-state-chunk', data: chunk }));
-                    chunk = [];
+            // Step 2: Get initial 200 items batch
+            logger.info("[WS] Fetching initial data batch (LIMIT 200)...");
+            db.all("SELECT timestamp, topic, payload, source_id FROM korelate_events ORDER BY timestamp DESC LIMIT 200", (err, batchRows) => {
+                if (err) {
+                    logger.error({ err }, "❌ Error fetching initial data.");
+                } else if (ws.readyState === ws.OPEN) {
+                    const processedRows = batchRows.map(row => processRow(row));
+                    ws.send(JSON.stringify({ type: 'history-initial-data', data: processedRows }));
                 }
-            }
-        }, (err, count) => {
-            if (err) {
-                logger.error({ err }, "❌ Error fetching initial tree state.");
-            } else if (ws.readyState === ws.OPEN) {
-                if (chunk.length > 0) {
-                    ws.send(JSON.stringify({ type: 'tree-initial-state-chunk', data: chunk }));
-                }
-                ws.send(JSON.stringify({ type: 'tree-initial-state-end', count }));
-                logger.info(`[WS] Initial tree state sent in chunks (Total topics: ${count}).`);
-            }
+
+                // Step 3: Get full tree state (Payload-free Lazy Loading)
+                logger.info("[WS] Fetching initial tree state (Lazy Loading Payload Mode)...");
+                const treeStateQuery = `
+                    SELECT topic, source_id, MAX(timestamp) as timestamp
+                    FROM korelate_events
+                    GROUP BY source_id, topic
+                    ORDER BY source_id, topic ASC;
+                `;
+                
+                db.all(treeStateQuery, (err, treeRows) => {
+                    if (err) {
+                        logger.error({ err }, "❌ Error fetching initial tree state.");
+                    } else if (ws.readyState === ws.OPEN) {
+                        // Chunk transmission in Node.js to avoid saturating the WS buffer
+                        const CHUNK_SIZE = 5000;
+                        const total = treeRows.length;
+                        
+                        for (let i = 0; i < total; i += CHUNK_SIZE) {
+                            const chunk = treeRows.slice(i, i + CHUNK_SIZE).map(r => processRow(r));
+                            ws.send(JSON.stringify({ type: 'tree-initial-state-chunk', data: chunk }));
+                        }
+                        
+                        ws.send(JSON.stringify({ type: 'tree-initial-state-end', count: total }));
+                        logger.info(`[WS] Initial tree state sent in chunks (Total topics: ${total}).`);
+                    }
+                });
+            });
         });
 
         ws.on('message', (message) => {
@@ -176,7 +170,7 @@ function initWebSocketManager(server, database, appLogger, basePath, getDbCallba
                 const parsedMessage = JSON.parse(message);
                 logger.debug({ type: parsedMessage.type, clientId }, "📥 Received WebSocket message");
 
-                // --- [NEW] Check for external handlers ---
+                // --- Check for external handlers ---
                 if (messageHandlers.has(parsedMessage.type)) {
                     const handler = messageHandlers.get(parsedMessage.type);
                     handler(parsedMessage, clientId, ws);
@@ -313,12 +307,16 @@ function processRow(row) {
          row.timestampMs = row.timestamp;
     }
     
-    if (typeof row.payload === 'object' && row.payload !== null) {
+    // If payload was not requested in query (Lazy Loading logic)
+    if (row.payload === undefined) {
+        row.payload = 'null';
+    } else if (typeof row.payload === 'object' && row.payload !== null) {
         try { row.payload = JSON.stringify(row.payload, longReplacer); } 
         catch (e) { row.payload = JSON.stringify({ "error": "Failed to stringify" }); }
     } else if (row.payload === null) {
         row.payload = 'null';
     }
+    
     return row;
 }
 

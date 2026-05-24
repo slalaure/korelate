@@ -15,7 +15,7 @@
  * [UPDATED] Integrated Vanilla JS Proxy state manager for reactive UI updates and data-driven routing.
  * [UPDATED] Implemented WebSocket Backpressure UI Feedback for high data rates.
  * [UPDATED] Decoupled WebSocket and Routing logic into dedicated modules.
- * [UPDATED] Supported chunked initial tree state loading to prevent backend OOM.
+ * [UPDATED] Implemented Lazy Loading for tree payloads to prevent Client and Server Out-Of-Memory crashes.
  */
 
 // ---  Module Imports ---
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let globalDbMin = 0;
     let globalDbMax = Date.now();
     let cachedI3xObjects = [];
-    let allKnownTopicsState = new Map(); // [NEW] Keep track of all topics ever seen
+    let allKnownTopicsState = new Map(); // Keep track of all topics ever seen
 
     let mainTree, mapperTree, chartTree;    
     let mainPayloadViewer;
@@ -427,9 +427,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 parentLi = parentLi.parentElement.closest('li');
             }
 
-            // Sync Payload Viewer
+            // Lazy Load Payload Sync
             const payload = node.dataset.payload;
-            mainPayloadViewer.display(state.currentSourceId, topic, payload);
+            if (!payload || payload === 'null') {
+                mainPayloadViewer.display(state.currentSourceId, topic, "Loading payload from database...");
+                sendWebSocketMessage({ type: 'get-topic-history', sourceId: state.currentSourceId, topic: topic });
+            } else {
+                mainPayloadViewer.display(state.currentSourceId, topic, payload);
+            }
         }
     });
 
@@ -491,11 +496,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Regular Data Payload
+        // Regular Data Payload (Lazy Loaded via WS if null)
         const payload = nodeContainer.dataset.payload;
-        mainPayloadViewer.display(sourceId, topic, payload);
+        if (!payload || payload === 'null') {
+            mainPayloadViewer.display(sourceId, topic, "Loading payload from database...");
+        } else {
+            mainPayloadViewer.display(sourceId, topic, payload);
+        }
         
-        if (btnCreateAlert) {
+       if (btnCreateAlert) {
             if (document.getElementById('btn-alerts-view').style.display !== 'none') {
                 btnCreateAlert.style.display = 'block';
                 btnCreateAlert.onclick = () => {
@@ -506,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 };            
             }
         }
-
         sendWebSocketMessage({ type: 'get-topic-history', sourceId: sourceId, topic: topic });
     }
 
@@ -684,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try { if (mqttPatternToRegex(pattern).test(msg.topic)) { ignoreForTreeUpdate = true; break; } } catch (e) {}
             }
             if (!ignoreForTreeUpdate) {
-                allKnownTopicsState.set(`${msg.sourceId}|${msg.topic}`, msg); // [NEW] Keep track of live topics
+                allKnownTopicsState.set(`${msg.sourceId}|${msg.topic}`, msg); // Keep track of live topics
                 const options = { enableAnimations: true };
                 const node = mainTree?.update(msg.sourceId, msg.topic, msg.payload, msg.timestamp, options);
                 mapperTree?.update(msg.sourceId, msg.topic, msg.payload, msg.timestamp);
@@ -754,13 +762,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'tree-initial-state':
                 case 'tree-initial-state-chunk':
-                    // [NEW] Handle chunks from the backend to prevent OOM
                     message.data.forEach(entry => {
                         allKnownTopicsState.set(`${entry.source_id || entry.sourceId}|${entry.topic}`, entry);
                     });
                     break;
                 case 'tree-initial-state-end':
-                    // [NEW] Triggers once all chunks have arrived
                     if (mainTree) mainTree.rebuild(Array.from(allKnownTopicsState.values()));
                     if (mapperTree) mapperTree.rebuild(Array.from(allKnownTopicsState.values()));
                     if (chartTree) chartTree.rebuild(Array.from(allKnownTopicsState.values()));
@@ -772,7 +778,44 @@ document.addEventListener('DOMContentLoaded', () => {
                     colorAllMapperTrees(); 
                     colorChartTree();
                     break;
-                case 'topic-history-data': mainPayloadViewer.updateHistory(message.sourceId, message.topic, message.data); break;
+                case 'topic-history-data': 
+                    mainPayloadViewer.updateHistory(message.sourceId, message.topic, message.data); 
+                    if (message.data && message.data.length > 0) {
+                        const latestPayload = typeof message.data[0].payload === 'object' ? JSON.stringify(message.data[0].payload) : String(message.data[0].payload);
+                        
+                        // Update DOM caches
+                        const updateNodeCache = (treeId) => {
+                            const node = document.querySelector(`#${treeId} .node-container[data-topic="${message.topic}"][data-source-id="${message.sourceId}"]`);
+                            if (node) node.dataset.payload = latestPayload;
+                            return node;
+                        };
+                        
+                        const mainNode = updateNodeCache('mqtt-tree');
+                        const mapperNode = updateNodeCache('mapper-tree');
+                        const chartNode = updateNodeCache('chart-tree');
+
+                        // Update active UI
+                        if (state.currentTopic === message.topic && state.currentSourceId === message.sourceId) {
+                            if (state.activeView === 'tree' && mainNode) {
+                                mainPayloadViewer.display(message.sourceId, message.topic, latestPayload);
+                                // Also handle alert button visibility
+                                if (btnCreateAlert) {
+                                    btnCreateAlert.style.display = 'block';
+                                    btnCreateAlert.onclick = () => {
+                                        let parsed = null;
+                                        try { parsed = JSON.parse(latestPayload); } catch(e) {}
+                                        state.activeView = 'alerts';
+                                        openCreateRuleModal(message.topic, parsed);
+                                    };
+                                }
+                            } else if (state.activeView === 'mapper' && mapperNode) {
+                                handleMapperNodeClick(null, mapperNode, message.sourceId, message.topic);
+                            } else if (state.activeView === 'chart' && chartNode) {
+                                handleChartNodeClick(null, chartNode, message.sourceId, message.topic);
+                            }
+                        }
+                    }
+                    break;
                 case 'db-status-update':
                     if (historyTotalMessages) historyTotalMessages.textContent = message.totalMessages.toLocaleString();
                     if (historyDbSize) historyDbSize.textContent = message.dbSizeMB.toFixed(2);
@@ -961,6 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleMapperNodeClick(e, node, sourceId, topic);
                 document.querySelectorAll('#mapper-tree .selected').forEach(n => n.classList.remove('selected'));
                 node.classList.add('selected');
+                sendWebSocketMessage({ type: 'get-topic-history', sourceId: sourceId, topic: topic });
             },
             allowFolderCollapse: true,
             isMultiSource: isMultiSource,
@@ -982,6 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     handleChartNodeClick(e, node, sourceId, topic);
                     document.querySelectorAll('#chart-tree .selected').forEach(n => n.classList.remove('selected'));
                     node.classList.add('selected');
+                    sendWebSocketMessage({ type: 'get-topic-history', sourceId: sourceId, topic: topic });
                 },
                 allowFolderCollapse: true,
                 isMultiSource: isMultiSource,
