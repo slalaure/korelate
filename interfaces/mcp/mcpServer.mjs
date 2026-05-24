@@ -144,7 +144,7 @@ function jsonSchemaToZod(schema) {
 async function createMcpServer(remoteConfig) {
     const server = new McpServer({
         name: "Korelate Controller",
-        version: "1.6.0-beta1",
+        version: "1.6.1",
         description: "Control the Korelate via tools defined in ai_tools_manifest.json.",
     });
 

@@ -1,4 +1,4 @@
-# Plan de Test Global - Korelate (v1.6.0-beta1)
+# Plan de Test Global - Korelate (v1.6.0)
 
 Ce document décrit la stratégie et les scénarios de test pour garantir la stabilité, la performance et la sécurité de Korelate.
 
