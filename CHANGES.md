@@ -1,5 +1,25 @@
 # Korelate Changelog
 
+## 1.6.1 - 2026-05-19
+This minor release improves administrator UX with a new persistent logging panel, enhances data source setup with connection testing, and polishes the AI assistant and visual modeler.
+
+### 🛠️ Key Improvements & Fixes
+- **Persistent Admin System Logs**: 
+    - Relocated 'System Logs' from the Admin tab to a resizable, toggleable bottom panel (VSCode-style).
+    - Accessible via a dedicated toggle button in the bottom-left corner for admins.
+- **Data Provider Connection Testing**: 
+    - Added a "Test Connection" button in the Provider Builder modal to verify credentials and network connectivity before saving.
+    - Implemented a secure backend testing endpoint (`/api/env/test-connection`) using temporary isolated connector instances.
+- **AI Chat & UI Polish**:
+    - Improved z-index management for confirmation modals to ensure they always appear above the AI chat panel.
+    - Enhanced JSON readability in confirmation dialogs with auto-expanding width and syntax-highlighted code blocks.
+- **Data Modeler Visual Theme**: 
+    - Harmonized the graph visualizer colors with the application's professional palette.
+    - Refined node borders and relationship edge colors to distinguish between Namespaces, Types, and Instances.
+- **Compatibility & Resilience**: 
+    - Added an `mcp_server.mjs` root wrapper for backward compatibility with older Docker/Agent configurations.
+    - Fixed several UI visibility bugs on mobile devices and sidebar layout issues.
+
 ## 2026-05-14 - E2E Obscura Fixes & Mobile UX
 - **E2E Testing (Obscura)**:
     - **Fixed Artifact Capture**: Enabled automatic screenshots and video recording for Playwright tests running against the Obscura remote browser.
@@ -342,45 +362,4 @@ This major release marks a significant milestone in Korelate's evolution, introd
 - **Context**: Fixed an issue where disabled UI functions (menu entries) remained visible on the sidebar despite being disabled in configuration or due to insufficient role permissions.
 - **Core Functions Touched**: `public/css/base.css` (`.tab-button` and `.alerts-sub-nav`).
 - **Pitfalls & Solutions**: A previously introduced `display: flex !important;` CSS rule in `base.css` to stabilize flexbox layout was unintentionally overriding inline JavaScript modifications (`style.display = 'none'`) injected by `public/app.js`. Removed the `!important` flag to restore correct visibility toggling based on application configuration.
-
-## 2026-05-19 - Persistent Admin System Logs Panel
-- **System Logs Relocation**: 
-    - Removed the 'System Logs' tab from the Admin View to free up space and provide a more 'IDE-like' experience.
-    - Implemented a persistent, resizable 'System Logs' panel at the bottom of the screen, accessible only to Admin users.
-- **VSCode-Style Toggle**: Added a small, fixed button in the bottom-left corner (similar to VSCode's bottom panel toggle) to show/hide the logs.
-- **UI Components & UX**: 
-    - Updated `AdminLogsPanel` web component to support flexible heights and removed hardcoded values.
-    - Implemented a custom resizer for the logs panel to allow users to expand it upwards.
-    - The panel state (visible/hidden) and height are managed in `app.js` with admin-only guards.
-- **Files Modified**: `public/index.html`, `public/html/view.admin.html`, `public/app.js`, `public/components/admin-logs-panel.js`, and `public/css/system-logs.css`.
-
-## 2026-05-19 - Data Provider Connection Testing
-- **Config Wizard Enhancement**: Added a "Test Connection" button in the Data Provider builder modal (`public/config.html`).
-- **Real-Time Validation**: Users can now verify credentials and network connectivity (MQTT, SQL, OPC UA, etc.) before saving a new or updated connector.
-- **Backend Support**: Implemented a new `POST /api/env/test-connection` endpoint that dynamically instantiates a temporary connector, attempts a connection, and gracefully tears it down without affecting the running application state.
-- **Core Functions Touched**: `interfaces/web/configApi.js`, `public/config.js`.
-
-## 2026-05-19 - Fix Provider Connection Test False Positives
-- **Bug Fix**: Fixed an issue where the "Test Connection" button would always report "Success" even if the data provider failed to connect (e.g. bad credentials or wrong IP).
-- **Root Cause**: The backend `test-connection` endpoint used `Promise.race` to enforce a timeout, but failed to check the actual boolean resolution value returned by the provider's `connect()` method. A `false` resolution did not throw an error, leading the API to assume success.
-- **Solution**: Explicitly check `if (connectResult === false)` in `interfaces/web/configApi.js` and throw a structured error so the frontend correctly displays "Failed".
-
-## 2026-05-19 - Fix AI Chat Confirmation Modal UI
-- **UI Overlay Fix**: Increased the `z-index` of the `.generic-modal-backdrop` (from 10,000 to 30,000) so that confirmation dialogs triggered by the AI Chat Widget appear correctly *above* the chat panel instead of being partially hidden behind it.
-- **Improved JSON Readability**: Modified the `confirmModal` utility to dynamically expand its maximum width to 800px when displaying complex code/HTML blocks (like `<pre>`).
-- **Tool Call Arguments Formatting**: Updated the `ai-chat-widget.js` to format the AI's requested JSON arguments using a proper code block with `white-space: pre-wrap`, better padding, and syntax colors, making it much easier for admins to review and approve complex actions.
-- **Files Touched**: `public/css/base.css`, `public/utils.js`, `public/components/ai-chat-widget.js`.
-
-## 2026-05-19 - Polish Data Modeler Visual Theme
-- **UI & UX Improvement**: Revamped the color scheme of the `KorelateGraph` in the Data Modeler (`public/view.modeler.js`) to align with the application's professional color palette.
-- **Node Styles**: Replaced aggressive, high-saturation colors with subtle pastel backgrounds. Reduced border widths from 3px to 2px. Replaced `dotted` borders with a cleaner `dashed` style for Instance objects.
-- **Semantic Borders & Edges**: Mapped node border colors and relationship edge colors directly to Korelate's core themes:
-  - **Namespaces** (`belongs to`): Primary Blue (`#007bff` / `#3391ff`)
-  - **Types** (`ChildOf`): Source Purple/Yellow (`#8e44ad` / `#bb86fc`)
-  - **Instances** (`InstanceOf` / `Implements`): Target Green/Teal (`#27ae60` / `#03dac6`)
-
-## 2026-05-19 - MCP Server Backward Compatibility
-- **Bug Fix**: Restored `mcp_server.mjs` at the project root as a backward-compatibility wrapper.
-- **Context**: The MCP server was recently relocated to `interfaces/mcp/mcpServer.mjs`. This relocation broke older Docker cached configurations, running containers, or external Agent configurations (like Claude Desktop) that were hardcoded to start the server using the old path `node /usr/src/app/mcp_server.mjs`.
-- **Solution**: Added a simple ESM wrapper at the root that imports the new location to ensure zero downtime and prevent `MODULE_NOT_FOUND` crashes for existing setups.
 
