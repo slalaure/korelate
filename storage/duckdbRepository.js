@@ -13,6 +13,7 @@
  * Manages all WRITE operations for the embedded DuckDB database.
  * [UPDATED] Refactored to extend BaseRepository, inheriting batch queue logic.
  * [UPDATED] Replaced lossy Queue Compaction with strict Spill-to-Disk (DLQ) to guarantee OT state integrity.
+ * [UPDATED] Fixed Date parsing issue during DLQ message replay.
  */
 
 const BaseRepository = require('./baseRepository');
@@ -99,7 +100,9 @@ class DuckDBRepository extends BaseRepository {
             let errorCount = 0;
 
             for (const msg of batch) {
-                const timestampIso = msg.timestamp.toISOString();
+                // [FIX] Ensure timestamp is always a Date object before calling toISOString.
+                // When messages are replayed from the JSON DLQ, msg.timestamp is a string.
+                const timestampIso = new Date(msg.timestamp).toISOString();
                 const connType = msg.connectorType || 'mqtt';
                 
                 stmt.run(timestampIso, msg.topic, msg.payloadStringForDb, msg.sourceId, msg.correlationId || null, connType, (runErr) => {
